@@ -4,13 +4,16 @@ const { genAI, SYSTEM_PROMPT } = require("../config/gemini");
 /* ── In-memory session store ── */
 const sessions = new Map();
 
+const MAX_MESSAGES = 20; // 👈 limit
+
 function getSession(sessionId) {
   if (!sessions.has(sessionId)) {
     sessions.set(sessionId, {
       id: sessionId,
       history: [],
       collectedData: { name: null, phone: null, email: null, requirement: null },
-      lastEmailHash: null,   // duplicate email rokne ke liye
+      lastEmailHash: null,
+      messageCount: 0, // 👈 counter
       createdAt: Date.now(),
     });
   }
@@ -29,15 +32,12 @@ setInterval(() => {
 async function sendLeadEmail(sess) {
   const { collectedData, id, history } = sess;
 
-  // Phone ya email dono mein se kuch na ho to mat bhejo
   if (!collectedData.phone && !collectedData.email) return;
 
-  // Duplicate check — same data pe dobara mat bhejo
   const currentHash = JSON.stringify(collectedData);
   if (sess.lastEmailHash === currentHash) return;
   sess.lastEmailHash = currentHash;
 
-  // Sirf user ke messages ki summary
   const chatSummary = history
     .filter(m => m.role === "user")
     .map(m => m.parts[0].text)
@@ -78,7 +78,7 @@ async function sendLeadEmail(sess) {
 
   try {
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: "onboarding@resend.dev", // 👈 fixed
       to: process.env.EMAIL_USER,
       subject: `🔔 New Lead: ${collectedData.name || "Unknown"} | ${collectedData.phone || collectedData.email}`,
       html,
@@ -98,12 +98,10 @@ function parseAndUpdateData(sess, rawReply) {
     try {
       const parsed = JSON.parse(match[1]);
       const prev = sess.collectedData;
-      let updated = false;
 
-      if (parsed.name && !prev.name) { prev.name = parsed.name; }
-      if (parsed.requirement && !prev.requirement) { prev.requirement = parsed.requirement; }
+      if (parsed.name && !prev.name) prev.name = parsed.name;
+      if (parsed.requirement && !prev.requirement) prev.requirement = parsed.requirement;
 
-      // sirf tab email bhejo jab phone ya email naya mile
       const gotPhone = parsed.phone && !prev.phone;
       const gotEmail = parsed.email && !prev.email;
 
@@ -120,7 +118,6 @@ function parseAndUpdateData(sess, rawReply) {
 }
 
 /* ── Gemini with fallback models ── */
-// 2.5 pehle try karo, 429/503 pe 1.5 pe fallback
 const MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash-lite"];
 
 function shouldFallback(err) {
@@ -152,7 +149,7 @@ async function callGeminiWithFallback(history, message) {
         console.warn(`⚠️ ${modelName} unavailable (${err.message.match(/\d{3}/)?.[0] || "err"}), trying next...`);
         continue;
       }
-      throw err; // real error (auth, bad request etc) — rethrow
+      throw err;
     }
   }
   throw new Error("All Gemini models are currently unavailable. Please try again in a moment.");
@@ -171,21 +168,36 @@ const sendChatMessage = async (req, res) => {
 
   const sess = getSession(sessionId);
 
+  // 👈 20 message limit check
+  if (sess.messageCount >= MAX_MESSAGES) {
+    return res.status(429).json({
+      success: false,
+      limitReached: true,
+      message: "You've reached the maximum number of messages for this session. Please contact us directly on +91 8218885483! 🙏"
+    });
+  }
+
   try {
     sess.history.push({ role: "user", parts: [{ text: message }] });
 
     const rawReply = await callGeminiWithFallback(
-      sess.history.slice(0, -1),  // history without current message
+      sess.history.slice(0, -1),
       message
     );
 
     const cleanReply = parseAndUpdateData(sess, rawReply);
     sess.history.push({ role: "model", parts: [{ text: cleanReply }] });
 
-    return res.status(200).json({ success: true, reply: cleanReply, sessionId });
+    sess.messageCount++; // 👈 count badhao sirf successful response pe
+
+    return res.status(200).json({
+      success: true,
+      reply: cleanReply,
+      sessionId,
+      messagesLeft: MAX_MESSAGES - sess.messageCount // 👈 frontend ko bata sakte ho
+    });
 
   } catch (err) {
-    // Failed hone pe user message history se hatao
     if (sess.history.at(-1)?.role === "user") sess.history.pop();
     console.error("Gemini Error:", err.message);
     return res.status(503).json({ success: false, message: "AI is busy right now. Please try again in a moment! 🙏" });

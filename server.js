@@ -26,7 +26,7 @@ app.listen(port, async () => {
 
   console.log("--- Environment Variables Check ---");
   console.log(`Email User: ${emailUser ? emailUser : "❌ NOT FOUND (Undefined)"}`);
-
+console.log("Resend Key:", process.env.RESEND_API_KEY);
 
   // Keep-alive ping — Render free tier ko jaag ta rakhega
   const BACKEND_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
