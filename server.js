@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const nodemailer = require("nodemailer");
 const mailRoutes = require("./routes/mailroutes");
 const chatRoutes = require("./routes/chatroutes");
 dotenv.config();
