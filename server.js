@@ -20,6 +20,14 @@ app.use("/api", chatRoutes);
 app.listen(port, async () => {
   console.log(`server running on ${port}`);
 
+  // 🔍 ENVIRONMENT VARIABLES CHECK (Sirf debug karne ke liye)
+  const emailUser = process.env.Email_user; // Aapke config file ke hisab se 'Email_user' (E bada)
+  const emailPass = process.env.Email_pass; // Aapke config file ke hisab se 'Email_pass' (E bada)
+
+  console.log("--- Environment Variables Check ---");
+  console.log(`Email User: ${emailUser ? emailUser : "❌ NOT FOUND (Undefined)"}`);
+  
+
   // Keep-alive ping — Render free tier ko jaag ta rakhega
   const BACKEND_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
   setInterval(async () => {
