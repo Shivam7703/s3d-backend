@@ -1,29 +1,29 @@
 const transporter = require("../config/mailer");
 
-  const sendFormMail = async (req, res)=>{
-    const {name, email, phone, message} = req.body;
+const sendFormMail = async (req, res) => {
+    const { name, email, phone, message } = req.body;
 
-    if(!name || !email || !phone || !message) {
-return res.status(400).json({
-    success:false,  message:"Fields Should not remains empty"
-})
+    if (!name || !email || !phone || !message) {
+        return res.status(400).json({
+            success: false, message: "Fields Should not remains empty"
+        })
     };
 
     const mailoptions = {
         from: email,
-        to: process.env.Email_user,
-subject: `New Form Submission from ${name}`,
-text:`Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`
+        to: process.env.EMAIL_USER,
+        subject: `New Form Submission from ${name}`,
+        text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`
     };
 
-try{
-     const info = await transporter.sendMail(mailoptions);
-     return res.status(200).json({success: true, message: "message sent  Successfully"})
+    try {
+        const info = await transporter.sendMail(mailoptions);
+        return res.status(200).json({ success: true, message: "message sent  Successfully" })
 
-    } catch(err) {
-console.error("Err while sending mail", err);
+    } catch (err) {
+        console.error("Err while sending mail", err);
     }
 
-  }
+}
 
-module.exports = {sendFormMail}
+module.exports = { sendFormMail }

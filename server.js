@@ -21,8 +21,8 @@ app.listen(port, async () => {
   console.log(`server running on ${port}`);
 
   // 🔍 ENVIRONMENT VARIABLES CHECK (Sirf debug karne ke liye)
-  const emailUser = process.env.EMAIL_USER; // Aapke config file ke hisab se 'Email_user' (E bada)
-  const emailPass = process.env.EMAIL_PASS; // Aapke config file ke hisab se 'Email_pass' (E bada)
+  const emailUser = process.env.EMAIL_USER; // Aapke config file ke hisab se 'EMAIL_USER' (E bada)
+  const emailPass = process.env.EMAIL_PASS; // Aapke config file ke hisab se 'EMAIL_PASS' (E bada)
 
   console.log("--- Environment Variables Check ---");
   console.log(`Email User: ${emailUser ? emailUser : "❌ NOT FOUND (Undefined)"}`);

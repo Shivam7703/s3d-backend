@@ -78,8 +78,8 @@ async function sendLeadEmail(sess) {
 
   try {
     await transporter.sendMail({
-      from: process.env.Email_user,
-      to: process.env.Email_user,
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,
       subject: `🔔 New Lead: ${collectedData.name || "Unknown"} | ${collectedData.phone || collectedData.email}`,
       html,
     });
@@ -100,7 +100,7 @@ function parseAndUpdateData(sess, rawReply) {
       const prev = sess.collectedData;
       let updated = false;
 
-      if (parsed.name        && !prev.name)        { prev.name        = parsed.name;        }
+      if (parsed.name && !prev.name) { prev.name = parsed.name; }
       if (parsed.requirement && !prev.requirement) { prev.requirement = parsed.requirement; }
 
       // sirf tab email bhejo jab phone ya email naya mile
