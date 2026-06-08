@@ -1,4 +1,4 @@
-const transporter = require("../config/mailer");
+const resend = require("../config/mailer");
 const { genAI, SYSTEM_PROMPT } = require("../config/gemini");
 
 /* ── In-memory session store ── */
@@ -77,7 +77,7 @@ async function sendLeadEmail(sess) {
   `;
 
   try {
-    await transporter.sendMail({
+    await resend.emails.send({
       from: "onboarding@resend.dev", // 👈 fixed
       to: process.env.EMAIL_USER,
       subject: `🔔 New Lead: ${collectedData.name || "Unknown"} | ${collectedData.phone || collectedData.email}`,

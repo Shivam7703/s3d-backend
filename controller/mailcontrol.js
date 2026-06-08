@@ -1,4 +1,4 @@
-const transporter = require("../config/mailer");
+const resend = require("../config/mailer");
 
 const sendFormMail = async (req, res) => {
     const { name, email, phone, message } = req.body;
@@ -13,11 +13,11 @@ const sendFormMail = async (req, res) => {
     from: "onboarding@resend.dev",  
     to: process.env.EMAIL_USER,
     subject: `New Form Submission from ${name}`,
-    text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`
+    text: `<p><b>Name:</b> ${name}</p><p><b>Email:</b> ${email}</p><p><b>Phone:</b> ${phone}</p><p><b>Message:</b> ${message}</p>`
 };
 
     try {
-        const info = await transporter.sendMail(mailoptions);
+        const info = await resend.emails.send(mailoptions);
         return res.status(200).json({ success: true, message: "message sent  Successfully" })
 
     } catch (err) {
